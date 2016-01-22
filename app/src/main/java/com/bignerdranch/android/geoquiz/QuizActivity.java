@@ -17,6 +17,7 @@ public class QuizActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = QuizActivity.class.getSimpleName();
     private static final String KEY_INDEX = "index";
+    private static final String KEY_CHEATED = "whereCheated";
     private static final String EXTRA_ANSWER_IS_TRUE = "com.bignerdranch.android.geoquiz.answer_is_true";
     private static final String EXTRA_ANSWER_SHOWN = "com.bignerdranch.android.geoquiz.answer_shown";
     private static final int REQUEST_CODE_CHEAT = 0;
@@ -34,6 +35,7 @@ public class QuizActivity extends AppCompatActivity {
             new Question(R.string.question_americas, true),
             new Question(R.string.question_asia, true)
     };
+    private boolean[] mWhereCheated;
 
     private int mCurrentIndex = 0;
     private boolean mIsCheater;
@@ -50,8 +52,11 @@ public class QuizActivity extends AppCompatActivity {
         Log.d(LOG_TAG, "onCreate() Called");
         setContentView(R.layout.activity_quiz);
 
+        mWhereCheated = new boolean[mQuestionBank.length];
+
         if (savedInstanceState != null) {
             mCurrentIndex = savedInstanceState.getInt(KEY_INDEX, 0);
+            mWhereCheated = savedInstanceState.getBooleanArray(KEY_CHEATED);
         }
 
         mTrueButton = (Button) findViewById(R.id.true_button);
@@ -107,6 +112,7 @@ public class QuizActivity extends AppCompatActivity {
                 return;
             }
             mIsCheater = CheatActivity.wasAnswerShown(data);
+            mWhereCheated[mCurrentIndex] = mIsCheater;
         }
     }
 
@@ -115,13 +121,14 @@ public class QuizActivity extends AppCompatActivity {
         super.onSaveInstanceState(savedInstanceState);
         Log.i(LOG_TAG, "onSaveInstanceState() Called");
         savedInstanceState.putInt(KEY_INDEX, mCurrentIndex);
+        savedInstanceState.putBooleanArray(KEY_CHEATED, mWhereCheated);
     }
 
     private void checkAnswer(boolean userPressedTrue) {
         boolean answerIsTrue = mQuestionBank[mCurrentIndex].isAnswerTrue();
         int messageResId = 0;
 
-        if (mIsCheater) {
+        if (mWhereCheated[mCurrentIndex]) {
             messageResId = R.string.judgment_toast;
         } else {
             if (userPressedTrue == answerIsTrue) {
